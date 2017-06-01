@@ -1,23 +1,31 @@
 <template>
   <div class="address">
     <el-row style="text-align: left">
-      UID: <el-input v-model="uid" placeholder="请输入UID" style="width: 300px;"></el-input>
+      用户ID: <el-input v-model="uid" placeholder="请输入UID" style="width: 300px;"></el-input>
       <el-button type="primary" icon="search" @click="getUserAddressList" style="margin-left: 10px;">搜索</el-button>
       <el-button type="primary" icon="plus" @click="showDialog(true)">添加</el-button>
     </el-row>
     <el-row style="margin-top: 20px;">
       <el-table :data="addressList" border style="width: 100%" v-loading.body="loading">
         <el-table-column prop="id" label="ID"></el-table-column>
-        <el-table-column prop="uid" label="UID"></el-table-column>
+        <el-table-column prop="uid" label="用户ID"></el-table-column>
         <el-table-column prop="province" label="省"></el-table-column>
         <el-table-column prop="city" label="市"></el-table-column>
         <el-table-column prop="district" label="区/县"></el-table-column>
         <el-table-column prop="address" label="地址"></el-table-column>
         <el-table-column prop="name" label="姓名"></el-table-column>
         <el-table-column prop="phone" label="手机号"></el-table-column>
-        <el-table-column prop="createTime" label="添加时间"></el-table-column>
-        <el-table-column prop="updateTime" label="更新时间"></el-table-column>
-        <el-table-column label="操作">
+        <el-table-column prop="createTime" label="添加时间" width="180">
+          <template scope="scope">
+            <span style="">{{ scope.row.createTime | dateFormat('yyyy-MM-dd hh:mm:ss') }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="updateTime" label="更新时间" width="180">
+          <template scope="scope">
+            <span style="">{{ scope.row.updateTime | dateFormat('yyyy-MM-dd hh:mm:ss') }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="150">
           <template scope="scope">
             <el-button size="small" @click="showDialog(false, scope.row)">编辑</el-button>
             <el-button size="small" type="danger" @click="deleteItem(scope.row)">删除</el-button>
@@ -31,8 +39,8 @@
         <el-form-item prop="id" style="display: none;">
           <el-input v-model="ruleForm.id" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item prop="uid" label="UID" :label-width="labelWidth">
-          <el-input type="number" v-model="ruleForm.uid" auto-complete="off"></el-input>
+        <el-form-item prop="uid" label="用户ID" :label-width="labelWidth">
+          <el-input type="number" v-model="ruleForm.uid" auto-complete="off" :disabled="disabled"></el-input>
         </el-form-item>
         <el-form-item prop="province" label="省" :label-width="labelWidth">
           <el-input type="text" v-model="ruleForm.province" auto-complete="off"></el-input>
@@ -75,6 +83,7 @@ export default {
       token: '',
       addressList: [],
       loading: false,
+      disabled: false,
       dialogVisible: false,
       addLoading: false,
       labelWidth: '120px',
@@ -113,7 +122,6 @@ export default {
       }
 
       this.loading = true;
-      this.token = '431b4522d53d438ebe802853765faa17';
       let data = {
         uid: this.uid,
         token: this.token
@@ -125,10 +133,8 @@ export default {
       }).then((response) => {
         if (0 === response.body.result) {
           this.addressList = response.body.addressList;
-          for (let i =0; i < this.addressList.length; i++) {
-            this.addressList[i].uid = this.addressList[i].uid + '';
-            this.addressList[i].createTime = dateFormat(this.addressList[i].createTime, 'yyyy-MM-dd hh:mm:ss');
-            this.addressList[i].updateTime = dateFormat(this.addressList[i].updateTime, 'yyyy-MM-dd hh:mm:ss');
+          for (let i = 0; i < this.addressList.length; i++) {
+            this.addressList[i].uid += '';
           }
         } else {
           this.$message({
@@ -153,9 +159,11 @@ export default {
       this.addLoading = false;
       if (isAdd) {
         this.dialogTitle = '添加用户收件地址';
+        this.disabled = false;
         this.ruleForm = {};
       } else {
         this.dialogTitle = '编辑用户地址';
+        this.disabled = true;
         this.ruleForm = {
           id: row.id,
           uid: row.uid,
@@ -175,7 +183,7 @@ export default {
         if (valid) {
           this.$http.post(userApi().updateUserAddress, JSON.stringify(this.ruleForm), {
             params: {
-              token: '431b4522d53d438ebe802853765faa17'
+              token: this.token
             },
           }).then((response) => {
             if (0 === response.body.result) {
@@ -214,7 +222,7 @@ export default {
 
         this.$http.post(userApi().deleteUserAddress, data, {
           params: {
-            token: '431b4522d53d438ebe802853765faa17'
+            token: this.token
           },
           emulateJSON: true,
         }).then((response) => {
@@ -244,11 +252,7 @@ export default {
   },
 
   mounted () {
-//    this.token = sessionStorage.getItem('token');
-//    this.userData = JSON.parse(sessionStorage.getItem('userData'));
-//    if (!isValidSessionData()) {
-//      this.$router.push('/login');
-//    }
+    this.token = sessionStorage.getItem('token');
     this.getUserAddressList();
   }
 

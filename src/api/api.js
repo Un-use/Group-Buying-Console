@@ -30,6 +30,15 @@ export const mallApi = () => {
     getMallCartList: '/server/mall/cart/list/get',
     updateMallItem: '/server/mall/item/update',
     getMallItemList: '/server/mall/item/list/get',
+    getCategoryList: '/server/mall/category/list/get',
+    getMallSetList: '/server/mall/set/list/get',
+    updateMallSet: '/server/mall/set/update',
+    getMallOrderList: '/server/mall/order/list/get',
+    updateMallOrder: '/server/mall/order/update',
+    getMallCommentList: '/server/mall/item/comment/list/get',
+    updateMallComment: '/server/mall/item/comment/update',
+    getMallReturnGoodsList: '/server/mall/return/goods/list/get',
+    updateMallReturnGoods: '/server/mall/return/goods/update',
 
   };
 };

@@ -33,14 +33,9 @@
               <el-menu-item index="/user/cart">购物车管理</el-menu-item>
             </el-submenu>
             <el-submenu index="2">
-              <template slot="title">管理员</template>
-              <el-menu-item index="/administrator">管理员管理</el-menu-item>
-            </el-submenu>
-            <el-submenu index="3">
               <template slot="title">商品</template>
               <el-menu-item index="/mall/item">商品管理</el-menu-item>
               <el-menu-item index="/mall/set">商品集管理</el-menu-item>
-              <el-menu-item index="/mall/goods">货物管理</el-menu-item>
               <el-menu-item index="/mall/order">订单管理</el-menu-item>
               <el-menu-item index="/mall/comment">评论管理</el-menu-item>
               <el-menu-item index="/mall/returnGoods">退货管理</el-menu-item>
@@ -97,13 +92,8 @@ export default {
   },
 
   mounted () {
-//    this.token = sessionStorage.getItem('token');
-//    this.userData = JSON.parse(sessionStorage.getItem('userData'));
-//    if (!isValidSessionData()) {
-//      this.$router.push('/login');
-//    }
-    this.token = '431b4522d53d438ebe802853765faa17';
-    this.userData = JSON.parse('{"uid":1,"phone":"18857119902","name":"未设置姓名","username":"未设置昵称","gender":"男","avatar":"https://www.unuseshare.cn/groupbuying/user/u_1/1487238608071_1.jpg","funds":0,"createTime":1487154110000,"updateTime":1487238608000}');
+    this.token = sessionStorage.getItem('token');
+    this.userData = JSON.parse(sessionStorage.getItem('userData'));
     if (typeof window.innerWidth !== 'undefined') {
       this.contentWidth = window.innerWidth - 275;
       this.contentHeight = window.innerHeight - 90;

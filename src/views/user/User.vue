@@ -76,11 +76,10 @@ export default {
       }
 
       this.loading = true;
-      let token = '431b4522d53d438ebe802853765faa17';
       if (isValidValue(this.uid)) {
         let data = {
           uid: this.uid,
-          token: token
+          token: this.token
         };
 
         this.$http.get(userApi().getUser, {
@@ -110,8 +109,7 @@ export default {
   },
 
   mounted () {
-//    this.token = sessionStorage.getItem('token');
-//    this.userData = JSON.parse(sessionStorage.getItem('userData'));
+    this.token = sessionStorage.getItem('token');
 //    if (!isValidSessionData()) {
 //      this.$router.push('/login');
 //    }

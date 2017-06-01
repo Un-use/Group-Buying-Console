@@ -1,7 +1,7 @@
 <template>
   <div class="cart">
     <el-row style="text-align: left">
-      UID: <el-input v-model="uid" placeholder="请输入UID" style="width: 300px;"></el-input>
+      用户ID: <el-input v-model="uid" placeholder="请输入UID" style="width: 300px;"></el-input>
       <el-button type="primary" icon="search" @click="getUserCartList" style="margin-left: 10px;">搜索</el-button>
       <el-button type="primary" icon="plus" @click="showDialog(true)">添加</el-button>
     </el-row>
@@ -32,13 +32,21 @@
           </template>
         </el-table-column>
         <el-table-column prop="cartId" label="购物车ID"></el-table-column>
-        <el-table-column prop="uid" label="UID"></el-table-column>
+        <el-table-column prop="uid" label="用户ID"></el-table-column>
         <el-table-column prop="itemId" label="商品ID"></el-table-column>
         <el-table-column prop="skuList" label="商品规格" :formatter="formatterSku"></el-table-column>
         <el-table-column prop="number" label="购买数量"></el-table-column>
-        <el-table-column prop="createTime" label="添加时间"></el-table-column>
-        <el-table-column prop="updateTime" label="更新时间"></el-table-column>
-        <el-table-column label="操作">
+        <el-table-column prop="createTime" label="添加时间">
+          <template scope="scope">
+            <span style="">{{ scope.row.createTime | dateFormat('yyyy-MM-dd hh:mm:ss') }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="updateTime" label="更新时间">
+          <template scope="scope">
+            <span style="">{{ scope.row.updateTime | dateFormat('yyyy-MM-dd hh:mm:ss') }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="150">
           <template scope="scope">
             <el-button size="small" @click="showDialog(false, scope.row)">编辑</el-button>
             <el-button size="small" type="danger" @click="deleteItem(scope.row)">删除</el-button>
@@ -62,17 +70,17 @@
         <el-form-item prop="cartId" style="display: none;">
           <el-input v-model="ruleForm.cartId" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item prop="uid" label="UID" :label-width="labelWidth">
-          <el-input type="number" v-model="ruleForm.uid" auto-complete="off"></el-input>
+        <el-form-item prop="uid" label="用户ID" :label-width="labelWidth">
+          <el-input type="number" v-model="ruleForm.uid" auto-complete="off" :disabled="disabled"></el-input>
         </el-form-item>
         <el-form-item prop="itemId" label="商品ID" :label-width="labelWidth">
-          <el-input type="number" v-model="ruleForm.itemId" auto-complete="off"></el-input>
-        </el-form-item>
-        <el-form-item prop="skuListJson" label="商品规格" :label-width="labelWidth">
-          <el-input type="text" v-model="ruleForm.skuListJson" auto-complete="off"></el-input>
+          <el-input type="number" v-model="ruleForm.itemId" auto-complete="off" :disabled="disabled"></el-input>
         </el-form-item>
         <el-form-item prop="number" label="购买数量" :label-width="labelWidth">
           <el-input type="number" v-model="ruleForm.number" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item prop="skuListJson" label="商品规格" :label-width="labelWidth">
+          <el-input type="textarea" v-model="ruleForm.skuListJson" auto-complete="off"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -97,6 +105,7 @@ export default {
       token: '',
       cartList: [],
       loading: false,
+      disabled: false,
       dialogVisible: false,
       addLoading: false,
       labelWidth: '120px',
@@ -152,7 +161,6 @@ export default {
       }
 
       this.loading = true;
-      this.token = '431b4522d53d438ebe802853765faa17';
       let data = {
         uid: this.uid,
         start: start,
@@ -166,16 +174,18 @@ export default {
       }).then((response) => {
         if (0 === response.body.result) {
           this.cartList = response.body.cartList;
-          for (let i = 0; i < this.cartList.length; i++) {
-            this.cartList[i].cartId = this.cartList[i].cartId + '';
-            this.cartList[i].itemId = this.cartList[i].itemId + '';
-            this.cartList[i].uid = this.cartList[i].uid + '';
-            this.cartList[i].number = this.cartList[i].number + '';
-            this.cartList[i].createTime = dateFormat(this.cartList[i].createTime, 'yyyy-MM-dd hh:mm:ss');
-            this.cartList[i].updateTime = dateFormat(this.cartList[i].updateTime, 'yyyy-MM-dd hh:mm:ss');
-          }
+          if (null !== this.cartList) {
+            for (let i = 0; i < this.cartList.length; i++) {
+              this.cartList[i].cartId += '';
+              this.cartList[i].uid += '';
+              this.cartList[i].itemId += '';
+              this.cartList[i].number += '';
+              this.cartList[i].createTime = dateFormat(this.cartList[i].createTime, 'yyyy-MM-dd hh:mm:ss');
+              this.cartList[i].updateTime = dateFormat(this.cartList[i].updateTime, 'yyyy-MM-dd hh:mm:ss');
+            }
 
-          this.allPage = parseInt(response.body.allCount/this.pageSize + 1);
+            this.allPage = parseInt(response.body.allCount/this.pageSize + 1);
+          }
         } else {
           this.$message({
             message: response.body.errorInfo,
@@ -199,9 +209,11 @@ export default {
       this.addLoading = false;
       if (isAdd) {
         this.dialogTitle = '添加购物车商品';
+        this.disabled = false;
         this.ruleForm = {};
       } else {
         this.dialogTitle = '编辑购物车商品';
+        this.disabled = true;
         this.ruleForm = {
           cartId: row.cartId,
           uid: row.uid,
@@ -219,7 +231,7 @@ export default {
         if (valid) {
           this.$http.post(mallApi().updateMallCart, JSON.stringify(this.ruleForm), {
             params: {
-              token: '431b4522d53d438ebe802853765faa17'
+              token: this.token
             },
           }).then((response) => {
             if (0 === response.body.result) {
@@ -242,6 +254,8 @@ export default {
             return false;
           });
 
+        } else {
+          this.addLoading = false;
         }
 
       });
@@ -258,7 +272,7 @@ export default {
 
         this.$http.post(mallApi().deleteMallCart, data, {
           params: {
-            token: '431b4522d53d438ebe802853765faa17'
+            token: this.token
           },
           emulateJSON: true,
         }).then((response) => {
@@ -296,12 +310,8 @@ export default {
   },
 
   mounted () {
-//    this.token = sessionStorage.getItem('token');
-//    this.userData = JSON.parse(sessionStorage.getItem('userData'));
-//    if (!isValidSessionData()) {
-//      this.$router.push('/login');
-//    }
-    this.getUserCartList(0, 20);
+    this.token = sessionStorage.getItem('token');
+    this.getUserCartList();
   }
 
 }

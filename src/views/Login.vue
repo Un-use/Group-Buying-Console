@@ -2,11 +2,11 @@
   <div class="login">
     <el-form :model="ruleForm" ref="ruleForm" :rules="rules" label-position="left" label-width="0px" class="demo-ruleForm login-container">
       <h3 class="title">系统登录</h3>
-      <el-form-item prop="phone">
-        <el-input type="text" v-model="ruleForm.phone" auto-complete="off" placeholder="请输入手机号"></el-input>
+      <el-form-item prop="phone" style="width: 100%">
+        <el-input type="text" v-model="ruleForm.phone" auto-complete="off" placeholder="请输入手机号" style="width: 100%"></el-input>
       </el-form-item>
-      <el-form-item prop="password">
-        <el-input type="password" v-model="ruleForm.password" auto-complete="off" placeholder="请输入密码"></el-input>
+      <el-form-item prop="password" style="width: 100%">
+        <el-input type="password" v-model="ruleForm.password" auto-complete="off" placeholder="请输入密码" style="width: 100%"></el-input>
       </el-form-item>
       <el-form-item style="width: 100%;">
         <el-button type="primary" style="width: 100%;" :loading="logining" @click="login">登录</el-button>

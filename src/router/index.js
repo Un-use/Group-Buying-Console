@@ -7,10 +7,7 @@ import User from '@/views/user/User'
 import Address from '@/views/user/Address'
 import Cart from '@/views/user/Cart'
 
-import Administrator from '@/views/administrator/Administrator'
-
 import MallComment from '@/views/mall/MallComment'
-import MallGoods from '@/views/mall/MallGoods'
 import MallItem from '@/views/mall/MallItem'
 import MallOrder from '@/views/mall/MallOrder'
 import MallReturnGoods from '@/views/mall/MallReturnGoods'
@@ -56,16 +53,6 @@ export default new Router({
           component: Cart,
         },
 
-        // Administrator
-        {
-          path: '/administrator',
-          name: 'Administrator',
-          meta: {
-            requireAuth: true,
-          },
-          component: Administrator,
-        },
-
         // Mall
         {
           path: '/mall/comment',
@@ -74,14 +61,6 @@ export default new Router({
             requireAuth: true,
           },
           component: MallComment,
-        },
-        {
-          path: '/mall/goods',
-          name: 'MallGoods',
-          meta: {
-            requireAuth: true,
-          },
-          component: MallGoods,
         },
         {
           path: '/mall/item',

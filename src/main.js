@@ -57,21 +57,20 @@ Vue.filter('dateFormat', function (value, pattern) {
 });
 
 router.beforeEach((to, from, next) => {
-  // if (to.meta.requireAuth) {
-  //   let token = sessionStorage.getItem('token');
-  //   let userData = sessionStorage.getItem('userData');
-  //   if (null !== token && typeof token !== 'undefined' && '' !== token && null !== userData && typeof userData !== 'undefined' && '' !== userData) {
-  //     next();
-  //   } else {
-  //     next({
-  //       path: '/login',
-  //       query: { redirect: to.fullPath },
-  //     });
-  //   }
-  // } else {
-  //   next();
-  // }
-  next();
+  if (to.meta.requireAuth) {
+    let token = sessionStorage.getItem('token');
+    let userData = sessionStorage.getItem('userData');
+    if (null !== token && typeof token !== 'undefined' && '' !== token && null !== userData && typeof userData !== 'undefined' && '' !== userData) {
+      next();
+    } else {
+      next({
+        path: '/login',
+        query: { redirect: to.fullPath },
+      });
+    }
+  } else {
+    next();
+  }
 });
 
 /* eslint-disable no-new */
