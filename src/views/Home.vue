@@ -25,7 +25,7 @@
       </el-col>
       <el-col :span="24" class="main">
         <el-col :span="3" style="min-height: 620px; min-width: 150px;">
-          <el-menu default-active="1-1" router="true" class="el-menu-vertical-demo" theme="dark" style="height: 100%;">
+          <el-menu default-active="1-1" :router="true" class="el-menu-vertical-demo" theme="dark" style="height: 100%;">
             <el-submenu index="1">
               <template slot="title">用户</template>
               <el-menu-item index="/user">用户管理</el-menu-item>

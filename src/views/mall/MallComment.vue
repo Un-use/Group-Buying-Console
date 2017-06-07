@@ -33,12 +33,12 @@
               </el-table-column>
               <el-table-column prop="createTime" label="添加时间">
                 <template scope="scope">
-                  <span style="">{{ scope.row.createTime | formatterDate }}</span>
+                  <span style="">{{ scope.row.createTime | dateFormat('yyyy-MM-dd hh:mm:ss') }}</span>
                 </template>
               </el-table-column>
               <el-table-column prop="updateTime" label="更新时间">
                 <template scope="scope">
-                  <span style="">{{ scope.row.updateTime | formatterDate }}</span>
+                  <span style="">{{ scope.row.updateTime | dateFormat('yyyy-MM-dd hh:mm:ss') }}</span>
                 </template>
               </el-table-column>
             </el-table>
@@ -98,8 +98,21 @@
         <el-form-item prop="content" label="评论内容" :label-width="labelWidth">
           <el-input type="textarea" v-model="ruleForm.content" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item prop="pictureListJson" label="图片" :label-width="labelWidth">
-          <el-input type="textarea" v-model="ruleForm.pictureListJson" auto-complete="off"></el-input>
+        <el-form-item prop="fileDataList" label="图片列表" :label-width="labelWidth">
+          <el-upload
+            class="upload-demo"
+            ref="upload"
+            name="file"
+            :multiple="true"
+            :action="uploadUrl"
+            :file-list="fileDataList"
+            :auto-upload="false"
+            :on-success="handleSuccess"
+            :on-remove="handleRemove">
+            <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
+            <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">上传到服务器</el-button>
+            <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过1M</div>
+          </el-upload>
         </el-form-item>
         <el-form-item prop="status" label="状态" :label-width="labelWidth">
           <el-select v-model="ruleForm.status" placeholder="请选择状态">
@@ -113,7 +126,7 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" :loading="addLoading" @click="updateMallOrder">确 定</el-button>
+        <el-button type="primary" :loading="addLoading" @click="updateMallComment">确 定</el-button>
       </div>
     </el-dialog>
 
@@ -122,7 +135,7 @@
 
 <script>
   import { isValidSessionData, dateFormat } from '../../common/Util'
-  import { mallApi } from '../../api/api'
+  import { mallApi, fileApi, FileSource } from '../../api/api'
 
   export default {
     name: 'app',
@@ -132,6 +145,10 @@
         commentItemId: '',
         commentUID: '',
         commentStatus: '',
+
+        // file
+        uploadUrl: '',
+        fileDataList: [],
 
         token: '',
         commentList: [],
@@ -219,7 +236,6 @@
                 this.commentList[i].status += '';
                 this.commentList[i].itemId += '';
               }
-
               this.allPage = parseInt(response.body.allCount/this.pageSize + 1);
             }
           } else {
@@ -251,6 +267,7 @@
             startTime: '',
             endTime: '',
           };
+          this.fileDataList = [];
         } else {
           this.disabled = true;
           this.dialogTitle = '编辑评论';
@@ -264,14 +281,21 @@
             createTime: row.createTime,
             updateTime: row.updateTime,
           };
+          this.fileDataList = null === row.fileDataList ? [] : row.fileDataList;
         }
 
       },
 
-      updateMallOrder () {
+      updateMallComment () {
         this.addLoading = true;
         this.$refs.ruleForm.validate((valid) => {
           if (valid) {
+            let pictureList = [];
+            for (let i = 0; i < this.fileDataList.length; i++) {
+              pictureList.push(this.fileDataList[i].name);
+            }
+            this.ruleForm.pictureListJson = JSON.stringify(pictureList);
+
             this.$http.post(mallApi().updateMallComment, JSON.stringify(this.ruleForm), {
               params: {
                 token: this.token
@@ -342,6 +366,25 @@
 
       },
 
+      submitUpload() {
+        this.$refs.upload.submit();
+      },
+
+      handleSuccess(response, file, fileList) {
+        if (0 === response.result) {
+          for (let i = 0; i < fileList.length; i++) {
+            if (file.uid === fileList[i].uid) {
+              fileList[i].url = file.response.fileDataList[0].url;
+            }
+          }
+          this.fileDataList = fileList;
+        }
+      },
+
+      handleRemove(file, fileList) {
+        this.fileDataList = fileList;
+      },
+
     },
 
     filters: {
@@ -359,6 +402,7 @@
 
     mounted () {
       this.token = sessionStorage.getItem('token');
+      this.uploadUrl = fileApi().singleFileUpload + '?token=' + this.token + '&type=' + FileSource.ITEM_COMMENT;
     }
 
   }

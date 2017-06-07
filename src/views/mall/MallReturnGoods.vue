@@ -88,8 +88,21 @@
         <el-form-item prop="des" label="退货描述" :label-width="labelWidth">
           <el-input type="textarea" v-model="ruleForm.des" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item prop="pictureListJson" label="图片" :label-width="labelWidth">
-          <el-input type="textarea" v-model="ruleForm.pictureListJson" auto-complete="off"></el-input>
+        <el-form-item prop="fileDataList" label="图片列表" :label-width="labelWidth">
+          <el-upload
+            class="upload-demo"
+            ref="upload"
+            name="file"
+            :multiple="true"
+            :action="uploadUrl"
+            :file-list="fileDataList"
+            :auto-upload="false"
+            :on-success="handleSuccess"
+            :on-remove="handleRemove">
+            <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
+            <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">上传到服务器</el-button>
+            <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过1M</div>
+          </el-upload>
         </el-form-item>
         <el-form-item prop="status" label="状态" :label-width="labelWidth">
           <el-select v-model="ruleForm.status" placeholder="请选择状态">
@@ -112,7 +125,7 @@
 
 <script>
   import { isValidSessionData, dateFormat } from '../../common/Util'
-  import { mallApi } from '../../api/api'
+  import { mallApi, fileApi, FileSource } from '../../api/api'
 
   export default {
     name: 'app',
@@ -121,6 +134,10 @@
       return {
         returnGoodsUID: '',
         returnGoodsStatus: '',
+
+        // file
+        uploadUrl: '',
+        fileDataList: [],
 
         token: '',
         returnGoodsList: [],
@@ -243,6 +260,7 @@
             status: '0',
             reason: '1',
           };
+          this.fileDataList = [];
         } else {
           this.disabled = true;
           this.dialogTitle = '编辑退货商品';
@@ -256,6 +274,7 @@
             des: row.des,
             pictureListJson: row.pictureListJson,
           };
+          this.fileDataList = null === row.fileDataList ? [] : row.fileDataList;
         }
 
       },
@@ -264,6 +283,12 @@
         this.addLoading = true;
         this.$refs.ruleForm.validate((valid) => {
           if (valid) {
+            let pictureList = [];
+            for (let i = 0; i < this.fileDataList.length; i++) {
+              pictureList.push(this.fileDataList[i].name);
+            }
+            this.ruleForm.pictureListJson = JSON.stringify(pictureList);
+
             this.$http.post(mallApi().updateMallReturnGoods, JSON.stringify(this.ruleForm), {
               params: {
                 token: this.token
@@ -334,6 +359,25 @@
 
       },
 
+      submitUpload() {
+        this.$refs.upload.submit();
+      },
+
+      handleSuccess(response, file, fileList) {
+        if (0 === response.result) {
+          for (let i = 0; i < fileList.length; i++) {
+            if (file.uid === fileList[i].uid) {
+              fileList[i].url = file.response.fileDataList[0].url;
+            }
+          }
+          this.fileDataList = fileList;
+        }
+      },
+
+      handleRemove(file, fileList) {
+        this.fileDataList = fileList;
+      },
+
     },
 
     filters: {
@@ -346,6 +390,7 @@
 
     mounted () {
       this.token = sessionStorage.getItem('token');
+      this.uploadUrl = fileApi().singleFileUpload + '?token=' + this.token + '&type=' + FileSource.ITEM_RETURN_GOODS;
     }
 
   }

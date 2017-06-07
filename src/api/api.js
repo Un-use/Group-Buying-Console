@@ -45,8 +45,8 @@ export const mallApi = () => {
 
 export const fileApi = () => {
   return {
-    singleFileUpload: '/server/file/single/upload',
-    multipleFileUpload: '/server/file/multiple/upload',
+    singleFileUpload: 'https://www.***.cn/server/file/single/upload',
+    multipleFileUpload: 'https://www.***.cn/server/file/multiple/upload',
   };
 };
 

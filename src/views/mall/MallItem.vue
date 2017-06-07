@@ -119,8 +119,8 @@
         <el-form-item prop="stock" label="库存" :label-width="labelWidth">
           <el-input type="number" v-model="ruleForm.stock" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item prop="cid" label="类别" :label-width="labelWidth">
-          <el-cascader expand-trigger="hover" :options="categoryTree" v-model="ruleForm.cid" :show-all-levels="false"></el-cascader>
+        <el-form-item prop="subCid" label="类别" :label-width="labelWidth">
+          <el-cascader expand-trigger="hover" :options="categoryTree" v-model="ruleForm.subCid" :show-all-levels="false"></el-cascader>
         </el-form-item>
         <el-form-item prop="choice" label="精选" :label-width="labelWidth">
           <el-select v-model="ruleForm.choice" placeholder="是否精选">
@@ -143,6 +143,38 @@
         <el-form-item prop="skuListJson" label="规格" :label-width="labelWidth">
           <el-input type="textarea" v-model="ruleForm.skuListJson" auto-complete="off"></el-input>
         </el-form-item>
+        <el-form-item prop="mainFileDataList" label="主图" :label-width="labelWidth">
+          <el-upload
+            class="upload-demo"
+            ref="mainUpload"
+            name="file"
+            :multiple="true"
+            :action="uploadUrl"
+            :file-list="mainFileDataList"
+            :auto-upload="false"
+            :on-success="mainHandleSuccess"
+            :on-remove="mainHandleRemove">
+            <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
+            <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload(1)">上传到服务器</el-button>
+            <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过1M</div>
+          </el-upload>
+        </el-form-item>
+        <el-form-item prop="detailFileDataList" label="详情图" :label-width="labelWidth">
+          <el-upload
+            class="upload-demo"
+            ref="detailUpload"
+            name="file"
+            :multiple="true"
+            :action="uploadUrl"
+            :file-list="detailFileDataList"
+            :auto-upload="false"
+            :on-success="detailHandleSuccess"
+            :on-remove="detailHandleRemove">
+            <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
+            <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload(2)">上传到服务器</el-button>
+            <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过1M</div>
+          </el-upload>
+        </el-form-item>
         <el-form-item prop="usage" label="用法" :label-width="labelWidth">
           <el-input type="textarea" v-model="ruleForm.usage" auto-complete="off"></el-input>
         </el-form-item>
@@ -161,7 +193,7 @@
 
 <script>
 import { isValidSessionData, dateFormat } from '../../common/Util'
-import { mallApi } from '../../api/api'
+import { mallApi, fileApi, FileSource } from '../../api/api'
 
 export default {
   name: 'app',
@@ -170,6 +202,11 @@ export default {
     return {
       itemStatus: '',
       itemTitle: '',
+
+      // file
+      uploadUrl: '',
+      mainFileDataList: [],
+      detailFileDataList: [],
 
       token: '',
       itemList: [],
@@ -196,9 +233,13 @@ export default {
         stock: '',
         skuListJson: '',
         description: '',
+        mainPictureListJson: '',
+        detailPictureListJson: '',
         choice: '',
         type: '1',
         status: '',
+        subCid: '',
+        cid: '',
       },
       rules: {
         title: [
@@ -337,7 +378,10 @@ export default {
           type: '1',
           choice: '0',
           status: '0',
+          cid: '',
         };
+        this.mainFileDataList = [];
+        this.detailFileDataList = [];
       } else {
         this.dialogTitle = '编辑商品';
         this.ruleForm = {
@@ -345,7 +389,8 @@ export default {
           title: row.title,
           usage: row.usage,
           price: row.price,
-          cid: row.cid,
+          subCid: row.cid,
+          cid: '',
           stock: row.stock,
           skuListJson: row.skuListJson,
           description: row.description,
@@ -353,6 +398,8 @@ export default {
           type: row.type,
           status: row.status,
         };
+        this.mainFileDataList = null === row.mainFileDataList ? [] : row.mainFileDataList;
+        this.detailFileDataList = null === row.detailFileDataList ? [] : row.detailFileDataList;
       }
 
     },
@@ -361,7 +408,19 @@ export default {
       this.addLoading = true;
       this.$refs.ruleForm.validate((valid) => {
         if (valid) {
-          this.ruleForm.cid = this.ruleForm.cid[1];
+          let pictureList = [];
+          for (let i = 0; i < this.mainFileDataList.length; i++) {
+            pictureList.push(this.mainFileDataList[i].name);
+          }
+          this.ruleForm.mainPictureListJson = JSON.stringify(pictureList);
+
+          pictureList = [];
+          for (let i = 0; i < this.detailFileDataList.length; i++) {
+            pictureList.push(this.detailFileDataList[i].name);
+          }
+          this.ruleForm.detailPictureListJson = JSON.stringify(pictureList);
+
+          this.ruleForm.cid = this.ruleForm.subCid[1];
           this.$http.post(mallApi().updateMallItem, JSON.stringify(this.ruleForm), {
             params: {
               token: this.token
@@ -432,6 +491,41 @@ export default {
 
     },
 
+    submitUpload(index) {
+      if (1 === index) {
+        this.$refs.mainUpload.submit();
+      } else {
+        this.$refs.detailUpload.submit();
+      }
+    },
+
+    mainHandleSuccess(response, file, fileList) {
+      this.mainFileDataList = this.handleSuccess(response, file, fileList);
+    },
+
+    detailHandleSuccess(response, file, fileList) {
+      this.detailFileDataList = this.handleSuccess(response, file, fileList);
+    },
+
+    handleSuccess(response, file, fileList) {
+      if (0 === response.result) {
+        for (let i = 0; i < fileList.length; i++) {
+          if (file.uid === fileList[i].uid) {
+            fileList[i].url = file.response.fileDataList[0].url;
+          }
+        }
+      }
+      return fileList;
+    },
+
+    mainHandleRemove(file, fileList) {
+      this.mainFileDataList = fileList;
+    },
+
+    detailHandleRemove(file, fileList) {
+      this.detailFileDataList = fileList;
+    },
+
   },
 
   filters: {
@@ -449,13 +543,17 @@ export default {
     },
 
     formatterCategory (value, categoryList) {
-      return categoryList[parseInt(value)].label;
+      if (value instanceof Array) {
+        return categoryList[value[0]].label + '  /  ' + categoryList[value[1]].label;
+      }
+      return categoryList[value].label;
     },
 
   },
 
   mounted () {
     this.token = sessionStorage.getItem('token');
+    this.uploadUrl = fileApi().singleFileUpload + '?token=' + this.token + '&type=' + FileSource.ITEM;
     this.getCategoryList();
   }
 
