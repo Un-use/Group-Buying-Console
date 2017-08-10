@@ -45,8 +45,8 @@ export const mallApi = () => {
 
 export const fileApi = () => {
   return {
-    singleFileUpload: '',
-    multipleFileUpload: '',
+    singleFileUpload: 'https://www.unuseshared.cn/server/file/single/upload',
+    multipleFileUpload: 'https://www.unuseshared.cn/server/file/multiple/upload',
   };
 };
 
